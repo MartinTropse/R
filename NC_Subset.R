@@ -1,11 +1,26 @@
 library(ncdf4)
 library(raster)
 
-setwd("E:/DataAnalys/OX2_SeasonPatternFish/ModelleringAvFisk/BALTICSEA_REANALYSIS_PHY_003_011_2nm1993_2019")
+setwd("D:/DataAnalys/OX2_SeasonPatternFish/ModelleringAvFisk/BALTICSEA_REANALYSIS_PHY_003_011_2nm1993_2019")
 
 list.files()
 
 nc_data = nc_open("dataset-reanalysis-nemo-monthlymeans_1601030281893.nc")
+
+{
+sink("C:/myGit/R/nc.txt")
+  print(nc_data)
+sink()  
+}
+
+parmList = c("sob","vo","thetao","uo","bottomT","so")
+lon = ncvar_get(nc_data, "longitude")
+lat = ncvar_get(nc_data, "latitude")
+myTime = ncvar_get(nc_data, "time")
+myDepth = ncvar_get(nc_data, "depth")
+
+#17912.5 days from 1950 =~ 1999-01 
+time1999=myTime>=17912.5
 
 xmx=max(lon)
 xmn=min(lon)
@@ -13,14 +28,6 @@ ymx=max(lat)
 ymn=min(lat)
 myExt=extent(c(xmn, xmx, ymn,ymx))
 
-#17912.5 days from 1950 =~ 1999-01 
-time1999=myTime>=17912.5
-
-parmList = c("sob","vo","thetao","uo","bottomT","so")
-lon = ncvar_get(nc_data, "longitude")
-lat = ncvar_get(nc_data, "latitude")
-myTime = ncvar_get(nc_data, "time")
-myDepth = ncvar_get(nc_data, "depth")
 
 so_array=ncvar_get(nc_data, "so") #Sea_water_salinity
 so_slice= so_array[,,1,] #Surface sea_water
@@ -29,34 +36,36 @@ sob_array=ncvar_get(nc_data, "sob") #Bottom_Temperature
 potTem_array=ncvar_get(nc_data, "thetao") #Potential Temperature
 potTem_slice= potTem_array[,,1,]
 
-so_slice1999_2019 = so_slice[,,time1999]       
+so_slice1999 = so_slice[,,time1999]       
 btmT_slice1999 = btmT_array[,,time1999]
 sob_slice1999 = sob_array[,,time1999]
 potTem_slice1999 = potTem_slice[,,time1999]
 
-dimOut=dim(so_slice1999_2019)
-dimOut=dim(btmT_slice1999)
-dimOut=dim(sob_slice1999)
-dimOut=dim(potTem_slice1999)
+dimOut=dim(so_slice1999)
+#dimOut=dim(btmT_slice1999)
+#dimOut=dim(sob_slice1999)
+#dimOut=dim(potTem_slice1999)
 
 mapSeq=seq(from=1, to=dimOut[3], by=1) #Creates a series of times, if dimOut[3] is the time period in the array
 
-
-setwd("E:/DataAnalys/OX2_SeasonPatternFish/ModelleringAvFisk/BALTICSEA_REANALYSIS_PHY_003_011_2nm1993_2019/RasterStack")
+setwd("D:/DataAnalys/OX2_GG_Bentos/EnvLayer/RasterStack")
+#Loop separate each band into a raster layer, which in turn can be loaded as a rasterstack
+#Rember to checkthat the correct "NC slice" is used and change the output location & name.
 
 for(aTime in mapSeq) {
-  timeMap=potTem_slice1999[,,aTime]
+  timeMap=so_slice1999[,,aTime]
   soRst=raster(t(timeMap), crs=CRS("+proj=longlat +datum=WGS84 +no_defs"))
   soRst=flip(soRst, direction = "y")
   extent(soRst) = myExt
-  myName = paste0("Salbtm", aTime,".tif")
+  myName = paste0("SalSurf", aTime,".tif")
   writeRaster(soRst, myName, "GTiff", overwrite=TRUE)  
 }
 
-potTemStack=raster::stack(list.files(file.path("E:/DataAnalys/OX2_SeasonPatternFish/ModelleringAvFisk/BALTICSEA_REANALYSIS_PHY_003_011_2nm1993_2019/RasterStack")
+soStack=raster::stack(list.files(file.path("D:/DataAnalys/OX2_GG_Bentos/EnvLayer/RasterStack")
                                     , pattern="*.tif$", full.names =TRUE))
-mean <- calc(potTemStack, fun = mean, na.rm = T)
-writeRaster(mean, "potTem_meanRaster.tiff", "GTiff", overwrite=TRUE)
+
+mean <- calc(soStack, fun = mean, na.rm = T)
+writeRaster(mean, "so_meanRaster.tiff", "GTiff", overwrite=TRUE)
 
 
 ###Get the max and min percentile per square over the timeperiod###
@@ -70,14 +79,14 @@ myMin=matrix(nrow = dimOut[1], ncol=dimOut[2])
 #the 10% percentile value is then added to a new matrix at the same index
 for(y in latSeq){
   for(x in lonSeq){
-   myQuant=quantile(potTem_slice1999[y,x,], probs=seq(0,1,by=0.1),na.rm=TRUE)
+   myQuant=quantile(so_slice1999[y,x,], probs=seq(0,1,by=0.1),na.rm=TRUE)
     myMax[y,x]=myQuant[10] # 10% highest percentile
   }
 }
   
 for(y in latSeq){
   for(x in lonSeq){
-    myQuant=quantile(potTem_slice1999[y,x,], probs=seq(0,1,by=0.1),na.rm=TRUE)
+    myQuant=quantile(so_slice1999[y,x,], probs=seq(0,1,by=0.1),na.rm=TRUE)
     myMin[y,x]=myQuant[2] # 10% lowest percentile
   }
 }
@@ -93,8 +102,9 @@ extent(minRst) = myExt
 plot(maxRst)
 plot(minRst)
 
-writeRaster(minRst, "potTem_minRaster.tif", "GTiff", overwrite=TRUE)
-writeRaster(maxRst, "potTem_maxRaster.tif", "GTiff", overwrite=TRUE)
+
+writeRaster(minRst, "So_Min.tif", "GTiff", overwrite=TRUE)
+writeRaster(maxRst, "So_Max.tif", "GTiff", overwrite=TRUE)
 
 
 
