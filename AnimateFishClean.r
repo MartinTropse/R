@@ -4,7 +4,6 @@ library(dplyr)
 library(reshape2)
 library(gifski)
 library(ggthemes)
-library(foreach)
 
 setwd("C:/R/AnimateFish")
 df=read.csv("FishKattegatt_CatchPerc_CPUE.csv", header=TRUE, sep=',', encoding = "Win-1252")
