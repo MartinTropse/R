@@ -7,13 +7,13 @@ library(maptools)
 ###Model Randomforest epibenot 6m. Sjopennor och grävande megafauna OSPAR### 
 setwd("C:/Bas/CurrentWD/Epibentos_Mod")
 
-predictors_b=raster::stack(list.files("MDA_Predict", pattern ="*.tif$", full.names=TRUE))
-paR=raster("MDA_Response/HELCOM_AB_J1V.tif", crs="+proj=utm +zone=33 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs")
+predictors=raster::stack(list.files("MDA_Predict", pattern ="*.tif$", full.names=TRUE))#change to predictors_b for infauna_models 
+paR=raster("MDA_Response/SG_MEGA.tif", crs="+proj=utm +zone=33 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs")
 
 
 #plot(predictors)
 extent(paR)
-extent(predictors)
+SMDA_extent=extent(predictors)
 paR=rasterToPoints(paR)
 
 paEnv=extract(predictors, paR[,1:2]) #Takes out the EnvLayers that matches the response variable locations
@@ -30,40 +30,44 @@ paEnv$K = myK
 test=paEnv[which(paEnv$K == 1),] 
 train=paEnv[which(paEnv$K > 1),]
 
+head(train)
 
 for(x in myTry){
-  rTrn_rf=randomForest(x=train[,c(1,2:5)],y=train[,8], ntree=2000, mtry=x)#Test number of random variables at each tree split 
+  rTrn_rf=randomForest(x=train[,c(1:5)],y=train[,8], ntree=2000, mtry=x)#Test number of random variables at each tree split 
   print(rTrn_rf)
 }
 
 
 
-rTrn_rf=randomForest(x=train[,c(1,2:5)],y=train[,8], ntree=2000, mtry=2)#classification model 
-eva <- evaluate(paEnv[paEnv[,8]==1, ], paEnv[paEnv[,8]==0, ], rTrn_cf)
+rTrn_rf=randomForest(x=train[,c(1:5)],y=train[,8], ntree=2000, mtry=4)#classification model 
+#eva <- evaluate(paEnv[paEnv[,8]==1, ], paEnv[paEnv[,8]==0, ], rTrn_cf)
 evaR <- evaluate(paEnv[paEnv[,8]==1, ], paEnv[paEnv[,8]==0, ], rTrn_rf)
+#evaRT <- evaluate(paEnv[test[,8]==1, ], paEnv[test[,8]==0, ], rTrn_rf)
 
 plot(rTrn_rf)
 
+pred_Train_rf <- predict(predictors, rTrn_rf, ext=SMDA_extent)
+#pred_Train_cf <- predict(predictors, rTrn_cf, ext=fullExt)
+
+
 {
-  sink("HELCOM_AB_J1V.txt")
+  sink("OSPAR_MEGA_SG.txt")
   print(rTrn_rf)
   print(evaR)
   print(importance(rTrn_rf))
-  #varImpPlot(rTrn_rf)
-sink()
+  print(pred_Train_rf)
+  print(evaRT)
+  sink()
 }
 
-
-
-pred_Train_rf <- predict(predictors, rTrn_rf, ext=smlExt)
-#pred_Train_cf <- predict(predictors, rTrn_cf, ext=fullExt)
 
 trh=threshold(evaR, "spec_sens")
 
 plot(pred_Train_rf)
 plot(pred_Train_rf>trh) #Use the Treshold and create a map in QGIS?
 
-writeRaster(pred_Train_rf, "pred_RF_P4_HELCOM_AB_AB_J1V.tif", crs="+proj=utm +zone=33 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs")
+write.csv(test, "test_RF_P5_OSPAR_SG_MEGA.csv")
+writeRaster(pred_Train_rf, "pred_RF_P5_OSPAR_SG_MEGA.tif", crs="+proj=utm +zone=33 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs")
 
 
 
@@ -75,15 +79,15 @@ writeRaster(pred_Train_rf, "pred_RF_P4_HELCOM_AB_AB_J1V.tif", crs="+proj=utm +zo
 setwd("C:/Bas/CurrentWD/Infauna_Mod")
 
 predictors=raster::stack(list.files("C:/Bas/CurrentWD/Infauna_Mod/MDA_Predict", pattern ="*.tif$", full.names=TRUE))
-paR=raster("MDA_Response/HELCOM_AB_H3O.tif", crs="+proj=utm +zone=33 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs")
+paR=raster("MDA_Response/HELCOM_AB_H3O2.tif", crs="+proj=utm +zone=33 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs")
 ###Prediction Area###
 #areaMask=raster("C:/Bas/CurrentWD/BTM/data_6m/mask2.tif", crs="+proj=utm +zone=33 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs")
 
-fullExt=extent(predictors)
+#fullExt=extent(predictors)
 
 plot(predictors)
 extent(paR)
-extent(predictors)
+#extent(predictors)
 
 paR=rasterToPoints(paR)
 
@@ -92,15 +96,16 @@ paEnv=cbind(paEnv, paR[,1:3])  #binds the dataframe of the env with actual data 
 
 paEnv=as.data.frame(na.omit(paEnv))
 
-set.seed(1)
 
 myTry = seq(1,6,by=1)
-myK=kfold(paEnv, k=5)
-paEnv = as.data.frame(paEnv)
+myK=dismo::kfold(paEnv, k=5)
+
 paEnv$K = myK
 
 test=paEnv[which(paEnv$K == 1),] 
 train=paEnv[which(paEnv$K > 1),]
+
+write.csv(test, "Test_H3O2.csv")
 
 for(x in myTry){
   rTrn_rf=randomForest(x=train[,c(1:6)],y=train[,9], ntree=2000, mtry=x)#Test number of random variables at each tree split 
@@ -110,32 +115,40 @@ for(x in myTry){
 
 
 rTrn_rf=randomForest(x=train[,c(1:6)],y=train[,9], ntree=2000, mtry=2)#classification model 
-eva <- evaluate(paEnv[paEnv[,8]==1, ], paEnv[paEnv[,8]==0, ], rTrn_cf)
+#eva <- evaluate(paEnv[paEnv[,8]==1, ], paEnv[paEnv[,8]==0, ], rTrn_cf)
 evaR <- evaluate(paEnv[paEnv[,9]==1, ], paEnv[paEnv[,9]==0, ], rTrn_rf)
+evaRT <- evaluate(paEnv[test[,9]==1, ], paEnv[test[,9]==0, ], rTrn_rf)
 
 
-{
-  sink("HELCOM_AB_H3O.txt")
-  print(rTrn_rf)
-  print(evaR)
-  print(importance(rTrn_rf))
-  #varImpPlot(rTrn_rf)
-  sink()
-}
 
 smlExt=extent(predictors_b)
 
 pred_Train_rf <- predict(predictors, rTrn_rf, ext=smlExt)
 #pred_Train_cf <- predict(predictors, rTrn_cf, ext=fullExt)
 
+
 setwd("C:/Bas/CurrentWD/Infauna_Mod")
+
+{
+  sink("HELCOM_AB_H3O2.txt")
+  print(rTrn_rf)
+  print(evaR)
+  print(importance(rTrn_rf))
+  #varImpPlot(rTrn_rf)
+  print(pred_Train_rf)
+  print(evaRT)  
+  sink()
+}
+
 
 trh=threshold(evaR, "spec_sens")
 
 plot(pred_Train_rf)
 plot(pred_Train_rf>trh) #Use the Treshold and create a map in QGIS?
 
-writeRaster(pred_Train_rf, "RF_P6_HELCOM_AB_H3O_Small.tif", crs="+proj=utm +zone=33 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs")
+
+
+writeRaster(pred_Train_rf, "RF_P6_HELCOM_AB_H3O2.tif", crs="+proj=utm +zone=33 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs")
 
 
 

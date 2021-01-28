@@ -2,6 +2,18 @@ setwd("D:/PhD Hörnan/R/Useful_scripts")
 
 #Scripts useful for data sorting
 
+###Newer section###
+df$Coord<- with(df, paste(Latitud, Longitud)) #Combine two columns into one 
+
+#Summarize data with tapply and then use do.call(rbind/cbind) to convert into a dataframe 
+out=tapply(df$Redlistade.arter, df$Coord, table)
+a=do.call(rbind,out)
+
+#Fast way to subset a dataframe
+sub=df[which(df$Uppdelning == "Kräftdjur"),]
+
+
+###Older section###
 
 #Expanded sorting
 # sorting examples using the mtcars dataset
