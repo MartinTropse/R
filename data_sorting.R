@@ -12,6 +12,24 @@ a=do.call(rbind,out)
 #Fast way to subset a dataframe
 sub=df[which(df$Uppdelning == "Kräftdjur"),]
 
+#Replace all values in dataframe bigger then 0 with 1
+halSpec[halSpec>0] = 1
+
+#Good line to check value distribution of a column
+plot(density(numDf$YrkesfiskeTorskmodell))
+
+#Foreach loop with an if statement
+library(foreach)
+
+foreach(xVal = df$x_SWEREF99_start, xPos = xSeq) %do% {
+  aLen = nchar(xVal)-xLen
+  if(aLen > 0){
+    chk=round(xVal*(basVal ** - aLen))
+    df$x_SWEREF99_start[xPos] = chk
+  }
+}
+ 
+
 
 ###Older section###
 
