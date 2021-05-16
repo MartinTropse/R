@@ -4,6 +4,28 @@ Collection of short GIS scritps that are useful and easy to forget!
 
 """
 
+#Simple script to load and visualize shp-files with rgdal in r 
+#https://www.youtube.com/watch?v=s-yzwsMkVfY&ab_channel=FlowersforFlowersfor
+
+setwd("C:/Bas/GIS_DataDoc/LandGranser")
+
+library(rgdal)
+
+shp = readOGR(dsn = ".", layer = "ESRI_Sweden_country2007_SWEREF99TM")
+
+plot(shp, col = "green", bg = "lightblue", lwd=1)
+
+library(ggplot2)
+
+df = fortify(shp)
+
+#The group by "group" (a column in the GeoDF) is important for ggplot to show it correct. 
+ggplot()+
+  geom_polygon(data=df, aes(x=long, y=lat, group = group),
+               fill = "green", color = "black", lwd = 1)+
+  theme_bw()
+
+#Raster commands
 library(raster)
 
 #Load and replace a certain raster value with NA, essentially clipping away that piece of the raster 
