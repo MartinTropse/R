@@ -15,6 +15,21 @@ sub=df[which(df$Uppdelning == "Kräftdjur"),]
 #Replace all values in dataframe bigger then 0 with 1
 halSpec[halSpec>0] = 1
 
+#Other easy replacement and subset command from StatQuest on LogisticRegression
+data[data == "?"] <- NA
+
+data[data$sex == 0,]$sex <- "F"
+data[data$sex == 1,]$sex <- "M"
+
+data$hd <- ifelse(test=data$hd == 0, yes="Healthy", no="Unhealthy")
+
+nrow(data[is.na(data$ca) | is.na(data$thal),])
+data[is.na(data$ca) | is.na(data$thal),]
+
+data <- data[!(is.na(data$ca) | is.na(data$thal)),]
+
+xtabs(~ hd + sex, data=data)
+
 #Good line to check value distribution of a column
 plot(density(numDf$YrkesfiskeTorskmodell))
 
