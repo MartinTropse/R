@@ -1,7 +1,6 @@
 setwd("D:/PhD Hörnan/R/Useful_scripts")
 
 #Scripts useful for data sorting
-
 ###Newer section###
 df$Coord<- with(df, paste(Latitud, Longitud)) #Combine two columns into one 
 
