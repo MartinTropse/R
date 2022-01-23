@@ -55,6 +55,9 @@ for(aCrd in unique(lowQldf$Coord)){
   }
 }
 
+table(upDf$Year)
+table(upDf$Kvalitet)
+
 table(lowQldf$Kvalitet)[1]-length(unique(lowQldf$Coord)) # 
 
 #Summarize the water quality change between standard samples and "follow-up" samples. 
