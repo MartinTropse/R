@@ -1,7 +1,6 @@
 setwd("D:/PhD Hörnan/R/Useful_scripts")
 
 #Scripts useful for data sorting
-
 ###Newer section###
 df$Coord<- with(df, paste(Latitud, Longitud)) #Combine two columns into one 
 
@@ -44,7 +43,15 @@ foreach(xVal = df$x_SWEREF99_start, xPos = xSeq) %do% {
   }
 }
  
+#Tibble for rearring columns
+library("tibble")
+my_data <- iris
+my_data <- as_tibble(my_data)# Convert to a tibble
 
+colnames(my_data)
+col_order=c("Sepal.Width", "Sepal.Length")
+
+my_data2 <- my_data[, col_order]
 
 ###Older section###
 
