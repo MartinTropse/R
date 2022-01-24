@@ -24,7 +24,7 @@ colnames(newFrame) = headList
 #Convert all columns to numeric which does not include Int, i.e. date and time.
 ID=which(!(grepl("Int", colnames(newFrame)))) 
 newFrame[ID] <- sapply(newFrame[ID],as.numeric) 
-newFrame=newFrame[which(newFrame$`SALIN_[PSU]`>1.5),] #Removes lines with salinity under 1.5 promile, change in freshwater areas.   
+newFrame=newFrame[which(newFrame$`Press_[dbar]`>15),] #Removes lines with salinity under 1.5 promile, change in freshwater areas.   
 
 maxBar=max(newFrame$`Press_[dbar]`)
 posVec = list()
@@ -42,7 +42,7 @@ for(thPos in seq(1, length(newFrame$`Press_[dbar]`),1)){
 graphDf=newFrame[unlist(posVec),]
 theTime = paste(graphDf$`IntD_[Date]`[1],graphDf$`IntT_[Time]`[1])
 
-colList = c("Press_[dbar]","SALIN_[PSU]","Temp_[캜]","DO_ml_[ml/l]")
+colList = c("Press_[dbar]","SALIN_[PSU]","Temp_[째C]","DO_ml_[ml/l]")
 subName <- names(newFrame)[(names(newFrame) %in% colList)]
 graphDf=graphDf[,c(subName)]
 
@@ -52,7 +52,7 @@ bp<-ggplot(graphMelt) + geom_path(aes(y=`Press_[dbar]`, x=value, color=variable)
 bp=bp+ylim((max(graphMelt$`Press_[dbar]`)),0)+scale_x_continuous(position = "top")+theme_bw()
 bp=bp+labs(x="Salinitet (PSU)",y="Djup (m)", title=paste(wndPark,theTime))
 bp=bp+theme(legend.title = element_blank(),panel.grid.major = element_line(colour = "#888888", size=0.2), panel.grid.minor = element_line(colour = "#888888", size=0.2),axis.ticks = element_blank())
-bp=bp+scale_color_manual(labels = c("캜", "Salinitet (PSU)", "Syre (ml/l)"),
+bp=bp+scale_color_manual(labels = c("째C", "Salinitet (PSU)", "Syre (ml/l)"),
                          values = c("#009688", "#b3dca0", "#83d0c9"))
 #"#258a63", "#ff0000", "#0a75ad" Difference color scheme. 
 
@@ -130,7 +130,7 @@ bp<-ggplot(graphMelt) + geom_path(aes(y=Press__dbar, x=value, color=variable), s
 bp=bp+ylim(65,0)+scale_x_continuous(position = "top")+theme_bw()
 bp=bp+labs(x="Salinitet (PSU)",y="Djup (m)", title=aDate)
 bp=bp+theme(legend.title = element_blank())#, legend.position = "bottom")
-bp=bp+scale_color_manual(labels = c("캜", "Salinitet (PSU)", "Syre (ml/l)"),
+bp=bp+scale_color_manual(labels = c("째C", "Salinitet (PSU)", "Syre (ml/l)"),
                          values = c("#009688", "#b3dca0", "#83d0c9"))
 
 
@@ -180,7 +180,7 @@ bp=bp+scale_color_manual(labels = c("캜", "Salinitet (PSU)", "Syre (ml/l)"),
 # theTime = paste(graphDf$`IntD_[Date]`[1],graphDf$`IntT_[Time]`[1])
 # 
 # 
-# colList = c("Press_[dbar]","SALIN_[PSU]","Temp_[캜]","DO_ml_[ml/l]")
+# colList = c("Press_[dbar]","SALIN_[PSU]","Temp_[째C]","DO_ml_[ml/l]")
 # subName <- names(newFrame)[(names(newFrame) %in% colList)]
 # graphDf=graphDf[,c(subName)]
 # 
@@ -190,5 +190,5 @@ bp=bp+scale_color_manual(labels = c("캜", "Salinitet (PSU)", "Syre (ml/l)"),
 # bp=bp+ylim((max(graphMelt$`Press_[dbar]`)),0)+scale_x_continuous(position = "top")+theme_bw()
 # bp=bp+labs(x="Salinitet (PSU)",y="Djup (m)", title=theTime)
 # bp=bp+theme(legend.title = element_blank())
-# bp=bp+scale_color_manual(labels = c("캜", "Salinitet (PSU)", "Syre (ml/l)"),
+# bp=bp+scale_color_manual(labels = c("째C", "Salinitet (PSU)", "Syre (ml/l)"),
 #                          values = c("#258a63", "#ff0000", "#0a75ad"))
