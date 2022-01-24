@@ -32,7 +32,7 @@ for(file in fileStr){
   #Convert all columns to numeric which does not include Int, i.e. date and time.
   ID=which(!(grepl("Int", colnames(newFrame)))) 
   newFrame[ID] <- sapply(newFrame[ID],as.numeric) 
-  newFrame=newFrame[which(newFrame$`SALIN_[PSU]`>1.5),] #Removes lines with salinity under 1.5 promile, change in freshwater areas.   
+  newFrame=newFrame[which(newFrame$`Press_[dbar]`>15),] #Removes lines with salinity under 1.5 promile, change in freshwater areas.   
   
   maxBar=max(newFrame$`Press_[dbar]`)
   posVec = list()
@@ -50,7 +50,7 @@ for(file in fileStr){
   graphDf=newFrame[unlist(posVec),]
   theTime = paste(graphDf$`IntD_[Date]`[1],graphDf$`IntT_[Time]`[1])
   
-  colList = c("Press_[dbar]","SALIN_[PSU]","Temp_[°C]","DO_ml_[ml/l]")
+  colList = c("Press_[dbar]","SALIN_[PSU]","Temp_[Â°C]","DO_ml_[ml/l]")
   subName <- names(newFrame)[(names(newFrame) %in% colList)]
   graphDf=graphDf[,c(subName)]
   graphDf$TimeID=rep(theTime, dim(graphDf)[1]) 
@@ -62,7 +62,7 @@ bp<-ggplot(graphMelt) + geom_path(aes(y=`Press_[dbar]`, x=value, color=variable)
 bp=bp+ylim((max(graphMelt$`Press_[dbar]`)),0)+scale_x_continuous(position = "top")+theme_bw()
 bp=bp+labs(x="Salinitet (PSU)",y="Djup (m)", title=paste(wndPark,theTime))
 bp=bp+theme(legend.title = element_blank(),panel.grid.major = element_line(colour = "#888888", size=0.2), panel.grid.minor = element_line(colour = "#888888", size=0.2),axis.ticks = element_blank())
-#bp=bp+scale_color_manual(labels = c("°C", "Salinitet (PSU)", "Syre (ml/l)")
+#bp=bp+scale_color_manual(labels = c("Â°C", "Salinitet (PSU)", "Syre (ml/l)")
                          
 np=ggplot(dfStack) + geom_path(aes(y=`Press_[dbar]`, x=value, color=variable),size=1.1)
 np=np+ylim((max(dfStack$`Press_[dbar]`)),0)+scale_x_continuous(position = "top")+theme_bw()
@@ -76,7 +76,7 @@ gp=gp+facet_wrap(~variable)
 gp=gp+labs(x="Salinitet (PSU)",y="Djup (m)", subtitle=paste("CTD-profiler: Aurora december"))
 gp=gp+theme(legend.title = element_blank(),panel.grid.major = element_line(colour = "#888888", size=0.2), panel.grid.minor = element_line(colour = "#888888", size=0.2),axis.ticks = element_blank(), axis.text.x = element_text(size = 6), strip.text =  element_text(size = 7))
 gp=gp+scale_color_viridis(discrete = TRUE)
-#np=np+scale_color_manual(labels = c("°C", "Salinitet (PSU)", "Syre (ml/l)"), values = c("#258a63", "#ff0000", "#0a75ad"))
+#np=np+scale_color_manual(labels = c("Â°C", "Salinitet (PSU)", "Syre (ml/l)"), values = c("#258a63", "#ff0000", "#0a75ad"))
 
 
 #values = c("#009688", "#b3dca0", "#83d0c9"))
