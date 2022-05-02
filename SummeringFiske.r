@@ -1,32 +1,23 @@
-#setwd("C:/Bas/AquaBiota/Projekt/OX2/GG/FiskeBilaga/FiskeData")
-setwd("C:/Bas/AquaBiota/Projekt/OX2/Triton/GIS")
+setwd("C:/Bas/AquaBiota/Projekt/OX2/Triton/GIS") #Sätt till mappen som har import filen. 
 
-list.files()
-
-df=read.csv("FiskeTritonCleaner.csv", sep=',',encoding="UTF-8", header=TRUE)
+list.files() #Skriver ut alla filer i mappen, går att kopiera till read.csv nedan om man så vill.
+df=read.csv("FiskeTritonCleaner.csv", sep=',',encoding="UTF-8", header=TRUE) #Läser datafilen med fiskedata
 
 names(df) = c("Utförare", "Landningsår", "Redskap", "Kvantitet_kg", "Fisk_MAF", "Fisk_LatSwe", "Fisk_Eng", 
-              "Lat", "Long", "Layer", "Path")
+              "Lat", "Long", "Layer", "Path") #Sätter nya kolumnnamn till datasetet.
 
-quantile(df$Kvantitet_kg, probs = seq(0,1,0.001))
+df$Cor=paste(df$Lat, df$Long) #Kombinerar lat & long till ett värde som blir unikt för varje inrapporteringspunkt. 
 
-df$Cor=paste(df$Lat, df$Long)
-length(unique(df$Lat))
-length(unique(df$Long))
-length(unique(df$Cor))
+unique(df$Fisk_MAF) #Använd för att se över vilka unika arter/MAF förkortningar som finns i datasetet
+df = df[which(df$Fisk_MAF == "HER"),] #Ändra gruppen som ska selekteras för kartan, t.ex. "HER" eller "COD"
+out=list(tapply(df$Kvantitet_kg, df$Cor, sum)) #Beräknar aggregerade värde för arten vid varje unik inrappoteringspunkt. 
+dfExp = do.call(cbind, out) #Binder ihop listorna från ovan till en dataframe för export. 
 
-unique(df$Fisk_MAF)
+write.table(dfExp, "FiskIntensitetHER.csv", sep=',', fileEncoding = "UTF-8") #Exportera data
 
-df = df[which(df$Fisk_MAF == "HER"),]
 
-out=list(tapply(df$Kvantitet_kg, df$Cor, sum))
+# tempDf=as.data.frame(dfRst)
+# max(tempDf$V1)
+# quantile(tempDf$V1, probs=seq(0,1,0.1))
 
-dfRst = do.call(cbind, out)
-
-dim(dfRst)
-
-# asDf=as.data.frame(dfRst)
-# max(asDf$V1)
-# quantile(asDf$V1, probs=seq(0,1,0.1))
-
-write.table(dfRst, "FiskIntensitetHER.csv", sep=',', fileEncoding = "UTF-8")
+#quantile(df$Kvantitet_kg, probs = seq(0,1,0.001))#Ger en överblick 
