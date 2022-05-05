@@ -1,12 +1,12 @@
-setwd("C:/Bas/AquaBiota/Projekt/OX2/Triton/GIS") #Sätt till mappen som har import filen. 
+setwd("C:/Bas/AquaBiota/Projekt/Visning/Fiske") #Sätt till mappen som har import filen. 
 
 list.files() #Skriver ut alla filer i mappen, går att kopiera till read.csv nedan om man så vill.
-df=read.csv("FiskeTritonCleaner.csv", sep=',',encoding="UTF-8", header=TRUE) #Läser datafilen med fiskedata
+df=read.csv("fishData_polen.csv", sep=',',encoding="UTF-8", header=TRUE) #Läser datafilen med fiskedata
 
 names(df) = c("Utförare", "Landningsår", "Redskap", "Kvantitet_kg", "Fisk_MAF", "Fisk_LatSwe", "Fisk_Eng", 
               "Lat", "Long", "Layer", "Path") #Sätter nya kolumnnamn till datasetet.
 
-df$Cor=paste(df$Lat, df$Long) #Kombinerar lat & long till ett värde som blir unikt för varje inrapporteringspunkt. 
+df$Cor=paste(df$x, df$y) #Kombinerar lat & long till ett värde som blir unikt för varje inrapporteringspunkt. 
 
 unique(df$Fisk_MAF) #Använd för att se över vilka unika arter/MAF förkortningar som finns i datasetet
 df = df[which(df$Fisk_MAF == "HER"),] #Ändra gruppen som ska selekteras för kartan, t.ex. "HER" eller "COD"
