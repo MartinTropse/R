@@ -8,7 +8,7 @@ library(dplyr)
 library(lubridate)
 
 rm(list=ls())
-setwd("C:/Bas/CTD/CTD_Data/Aurora_Sep2021")
+setwd("C:/Bas/AquaBiota/Projekt/GGK_Hydro/Hydrografi/CTD_Data")
 
 dfStack=data.frame(matrix(nrow=0,ncol = 4))
 colnames(dfStack) = c("Press_[dbar]","TimeID","variable","value")
@@ -213,14 +213,23 @@ dfStack$TimeID=strptime(dfStack$TimeID, "%Y-%m-%d %H:%M:%S") #Line if you want s
 subStack=dfStack %>% 
   filter(TimeID > ymd_hms("2021-09-08 20:00:00"))
 
+wndPark = ": utredningsområde"
+
+unique(dfStack$variable)
+
+dfStack$variable <- factor(dfStack$variable, levels = c("Temp_[°C]", "SALIN_[PSU]", "DO_ml_[ml/l]"), 
+                  labels = c("°C", "Salinitet (PSU)", "Syre ml/l"))
 
 #Section for creatign summary graphs 
-gp=ggplot(subStack) + geom_path(aes(y=`Press_[dbar]`, x=value, color=TimeID),size=0.3)
-gp=gp+ylim((max(subStack$`Press_[dbar]`)),0)+scale_x_continuous(position = "top")+theme_bw()
-gp=gp+facet_wrap(~variable)
-gp=gp+labs(x="Salinitet (PSU)",y="Djup (m)", subtitle=paste("CTD-profiler:", wndPark))
-gp=gp+theme(legend.position = "none",legend.title = element_blank(),panel.grid.major = element_line(colour = "#888888", size=0.2), panel.grid.minor = element_line(colour = "#888888", size=0.2),axis.ticks = element_blank(), axis.text.x = element_text(size = 6), strip.text =  element_text(size = 7))
-gp=gp+scale_color_viridis(discrete = TRUE)
+gp=ggplot(dfStack) + geom_path(aes(y=`Press_[dbar]`, x=value, color=TimeID),size=0.3)
+gp=gp+ylim((max(dfStack$`Press_[dbar]`)),0)+scale_x_continuous(position = "top")+theme_bw()
+gp=gp+facet_wrap(~variable, scales = "free")
+gp=gp+labs(x="",y="Djup (m)", subtitle=("CTD-profiler GG: utredningsområde"))
+gp=gp+theme(legend.position = "none",legend.title = element_blank(),panel.grid.major = element_line(colour = "#888888", size=0.2), panel.grid.minor = element_line(colour = "#888888", size=0.2),axis.ticks = element_blank(),axis.title.x = element_blank(), axis.text.x = element_text(size = 7), strip.text =  element_text(size = 8), axis.text.y =  element_text(size = 8),axis.title.y = element_text(size = 9))
+gp=gp+theme(plot.subtitle = element_text(hjust = 0.5))
+gp=gp+scale_color_viridis(discrete = TRUE, option = "D")
+
+
 
 np=ggplot(subStack) + geom_path(aes(y=`Press_[dbar]`, x=value, color=variable),size=0.6)
 np=np+ylim((max(subStack$`Press_[dbar]`)),0)+scale_x_continuous(position = "top")+theme_bw()
