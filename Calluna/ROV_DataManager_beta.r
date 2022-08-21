@@ -200,6 +200,8 @@ names(subMrg) = c("Heading", "Roll","Pitch", "Depth","Longitude", "ID", "Date", 
 expAttentionMrg=subMrg[,c("ID","Note", "Date", "Time","Depth", "Heading", "Longitude", "Latitude")]
 write.csv(expAttentionMrg, paste0("attention_data_",theName,".csv"), row.names = FALSE)
 
+
+
 ###Match each video with its respective geolocation### 
 sonrT_Rgx="(?<=SONAR-)[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}-[0-9]{2}-[0-9]{2}-[0-9]{3}" #Finds time in solar video
 sonrF_Rgx=".+SONAR.+\\.mpg$" #Finds sonar video file
@@ -222,6 +224,7 @@ videoList=dirList[grep(".+\\.mpg$",dirList)]
 videoDf = as.data.frame(matrix(nrow = length(videoList), ncol = 2))
 #names(videoDf) = c("overFile","HdFile","sonarFile", "FileTime")
 names(videoDf) = c("VideoFile", "FTime_Orig")
+
 sink("Printout_Store.txt")
 #Sorts videofiles and times into dataframe and seperate list
 foreach(aFile = videoList, posFile = seq(1, length(videoList), 1)) %do% {
