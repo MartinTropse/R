@@ -96,6 +96,8 @@ for(site in unique(cmbMlt$`Site Name`)){
          width = 14, height = 16, units = "in")
 }
 
+
+
 slimGeo=as.data.frame(matrix(ncol = 5, nrow = 0))
 names(slimGeo) = c("Site","Bottendjup","X","Y","Date")
 
