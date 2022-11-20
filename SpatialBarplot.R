@@ -1,7 +1,7 @@
 library(reshape2)
 library(ggplot2)
 library(viridis)
-
+library(stringr)
 
 setwd("C:/Bas/AquaBiota/Projekt/Life DNAquatics/Spatial_study")
 
@@ -42,6 +42,8 @@ spc=merge(spc, myName,by = "row.names")
 spc$rowName=row.names(spc)
 names(spc)[29] = "Namn"
 
+drops = "rowName"
+spc=spc[,!(names(spc) %in% drops) ]
 
 spcMlt=melt(spc, value.name = "SeqData")
 names(spcMlt) = c("Sample","Namn","Species","SeqData")
@@ -49,15 +51,18 @@ spcMlt$Species = as.character(spcMlt$Species)
 
 spcMlt=spcMlt[order(spcMlt[,"Species"], decreasing =TRUE),]
 
+str(spcMlt)  
+spcMlt$Namn=stringr::str_to_title(spcMlt$Namn)
+
 gg=ggplot(data=spcMlt, aes(x=Namn, y=factor(Species, 
                                               levels = rev(levels(factor(Species)))), fill=SeqData))
-gg=gg+geom_tile(color ="#000000")+  scale_fill_gradient2(
+gg=gg+geom_tile(color ="#000000") +  scale_fill_gradient2(
   low = "#FFFFFF", 
   mid = "#eeefec", 
   high = "brown", 
   midpoint = .06
 )
 gg=gg+labs(y="", x="", title = "Sekvensfördelning (%) av fiskarter i Moälven, per prov")
-gg=gg+theme(axis.text.x = element_text(angle = 90), axis.text.y = element_text(size = 14), plot.title = element_text(size = 16), legend.title = element_blank())
+gg=gg+theme(axis.text.x = element_text(size = 13,angle = 90), axis.text.y = element_text(size = 14), plot.title = element_text(size = 16), legend.title = element_blank())
 
 
