@@ -6,8 +6,8 @@ library(sf)
 library(ggpubr)
 
 
-
-setwd("C:/Users/MartinAndersson/Calluna AB/JAG0092 Slite förstudie CCS 2021 - Dokument/JAG0092b, Hydrografi/GIS/Script/CTD")
+#setwd("C:/Users/MartinAndersson/Calluna AB/JAG0092 Slite förstudie CCS 2021 - Dokument/JAG0092b, Hydrografi/GIS/Script/CTD")
+setwd("C:/Users/MartinAndersson/Calluna AB/JAG0092-1_CCS_2021 - Dokument/JAG0092b_Hydrografi/Arbetsdokument/Rådata CTD 2022")
 
 df=read.csv("CTD_JAG0092b_081422_1136.csv", fileEncoding = "latin1") # Needs to be in latin1 to read rows
 
@@ -71,7 +71,8 @@ names(cmbDf) <- c("Station", "Djup", "Temperatur","Syre_mgL", "Sal_PSU", "Botten
 cmbDf=cmbDf[,c("Station", "Djup", "Temperatur","Syre_mgL", "Sal_PSU", "Bottendjup", "X", "Y","Date")] #Check X Y
 write.csv(cmbDf, "cmbDf.csv", row.names = FALSE, fileEncoding = "UTF-8")
 
-setwd("C:/Users/MartinAndersson/Calluna AB/JAG0092 Slite förstudie CCS 2021 - Dokument/JAG0092b, Hydrografi/GIS/Script/CTD/CTD_Graphs")
+dir.create(file.path(getwd(), "GraphFolder"))
+setwd(file.path(getwd(), "GraphFolder"))
 
 sttStr = "https://callunaab.sharepoint.com/teams/JAG0092/Delade%20dokument/Forms/AllItems.aspx?id=%2Fteams%2FJAG0092%2FDelade%20dokument%2FJAG0092b%2C%20Hydrografi%2FGIS%2FScript%2FCTD%2FCTD%5FGraphs%2FCTD%5FGraph%5F"
 endStr = "%2Epdf&parent=%2Fteams%2FJAG0092%2FDelade%20dokument%2FJAG0092b%2C%20Hydrografi%2FGIS%2FScript%2FCTD%2FCTD%5FGraphs"
@@ -235,6 +236,6 @@ gpkgPath="C:/Users/MartinAndersson/Calluna AB/JAG0092 Slite förstudie CCS 2021 
 gpkg="CTD_GeoSlite.gpkg"
 st_write(geoLayer, paste0(gpkgPath, gpkg), "CTD_SliteAll",append = TRUE)
 
-slimShp=st_as_sf(slimGeo, coords = c("Y","X"), crs = crsObj)
+slimShp=st_as_sf(slimGeo, coords = c("X","Y"), crs = crsObj)
 
-st_write(slimShp, paste0(gpkgPath,myGpkg), paste0("CTD_GeoSliteSum"), append = TRUE)
+st_write(slimShp, paste0(gpkgPath,myGpkg), paste0("CTD_GeoSliteSum_3"), append = TRUE)

@@ -81,4 +81,7 @@ DfQ2_4 = df[which(df$CPUE_mean>=quantCPUE[2]),]
 DfQ2_4$Presence = rep(1, length(DfQ2_4$CPUE_mean))
 
 
+#Convert a data frame to simple feature object and export as shape
+aSf=sf::st_as_sf(diveTaxMlt, coords = c("X", "Y"), crs = "+proj=utm +zone=33 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs")
 
+st_write(aSf, "diveTransctMlt_2021_2.shp")

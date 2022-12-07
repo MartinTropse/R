@@ -1,3 +1,5 @@
+rm(list = ls())
+
 library(ggplot2)
 library(viridis)
 library(reshape2)
@@ -5,11 +7,11 @@ library(lubridate)
 library(sf)
 library(ggpubr)
 
+#Raw data folder
+setwd("C:/Users/MartinAndersson/Calluna AB/JAG0092-1_CCS_2021 - Dokument/JAG0092b_Hydrografi/Arbetsdokument/CTD/Rawdata_CTD2022/New")
+list.files()
 
-
-setwd("C:/Users/MartinAndersson/Calluna AB/JAG0092 Slite förstudie CCS 2021 - Dokument/JAG0092b, Hydrografi/GIS/Script/CTD")
-
-df=read.csv("CTD_JAG0092b_081422_1136.csv", fileEncoding = "latin1") # Needs to be in latin1 to read rows
+df=read.csv("11aug_3nov_KorMeasurementFileExport_111422_145235.csv", fileEncoding = "latin1") # Needs to be in latin1 to read rows
 
 startChk = TRUE
 
@@ -32,10 +34,8 @@ for(rows in seq(dim(df)[1])){
   }
 }
 
-#df=df[-which(df$`Date (MM/DD/YYYY)` == "FILE CREATED:"),]
 
 siteRows=grep("Site Name", df$`Site Name`,fixed =TRUE)
-
 newDf=df[siteRows+1,]
 
 geoDf=read.csv("Hydrografi_Stationer.csv", fileEncoding = "UTF-8")
@@ -52,15 +52,8 @@ newDf$`Site Name`= as.factor(newDf$`Site Name`)
 
 cmbDf=merge(newDf, geoDf, by.x = "Site Name", by.y = "Station")
 
-cmbDf$Date=lubridate::as_date(cmbDf$`Date (MM/DD/YYYY)`, "%d/%m/%Y", tz = "CET")
-cmbDf=cmbDf[,!(names(cmbDf) %in% c("Date (MM/DD/YYYY)"))] 
-
-
-
-#cmbShp=st_as_sf(cmbDf, coords = c("Y","X"), crs = crsObj)
-myGpkg=paste0("CTD_GeoSlite",".gpkg")
-#st_write(cmbShp,myGpkg, driver ="GPKG")
-#st_write(cmbShp, myGpkg, paste0("CTD_GeoSlite",min(cmbDf$Date)), append = TRUE)
+cmbDf$Date=lubridate::as_date(cmbDf$`Date (MM/DD/YYYY)`, "%m/%d/%Y", tz = "CET") # Creates new date col
+cmbDf=cmbDf[,!(names(cmbDf) %in% c("Date (MM/DD/YYYY)"))]  # Removes previous one 
 
 cmbMlt=melt(cmbDf, id.vars = c("Site Name","Date","Depth m", "Bottendjup","X","Y"))
 cmbMlt$`Site Name`<-droplevels(as.factor(cmbMlt$`Site Name`))
@@ -69,12 +62,13 @@ cmbMlt$`Depth m` = as.numeric(cmbMlt$`Depth m`)
 #Export the cmbDf for use in the scatterplot/merge section further down 
 names(cmbDf) <- c("Station", "Djup", "Temperatur","Syre_mgL", "Sal_PSU", "Bottendjup", "Y", "X", "Date") #Check X Y
 cmbDf=cmbDf[,c("Station", "Djup", "Temperatur","Syre_mgL", "Sal_PSU", "Bottendjup", "X", "Y","Date")] #Check X Y
-write.csv(cmbDf, "cmbDf.csv", row.names = FALSE, fileEncoding = "UTF-8")
 
-setwd("C:/Users/MartinAndersson/Calluna AB/JAG0092 Slite förstudie CCS 2021 - Dokument/JAG0092b, Hydrografi/GIS/Script/CTD/CTD_Graphs")
+CTD_Path="C:/Users/MartinAndersson/Calluna AB/JAG0092-1_CCS_2021 - Dokument/JAG0092b_Hydrografi/Arbetsdokument/CTD"
+dir.create(file.path(CTD_Path, "Graphs"))
+setwd(file.path(CTD_Path, "Graphs"))
 
-sttStr = "https://callunaab.sharepoint.com/teams/JAG0092/Delade%20dokument/Forms/AllItems.aspx?id=%2Fteams%2FJAG0092%2FDelade%20dokument%2FJAG0092b%2C%20Hydrografi%2FGIS%2FScript%2FCTD%2FCTD%5FGraphs%2FCTD%5FGraph%5F"
-endStr = "%2Epdf&parent=%2Fteams%2FJAG0092%2FDelade%20dokument%2FJAG0092b%2C%20Hydrografi%2FGIS%2FScript%2FCTD%2FCTD%5FGraphs"
+sttStr = "https://callunaab.sharepoint.com/teams/JAG0092-1/Delade%20dokument/Forms/AllItems.aspx?id=%2Fteams%2FJAG0092%2D1%2FDelade%20dokument%2FJAG0092b%5FHydrografi%2FArbetsdokument%2FCTD%2FGraphs%2FCTD%5FGraph%5F"
+endStr = "%2Epdf&viewid=9f30aa4a%2Dbcbc%2D45f0%2D8284%2D065ac39dc79a&parent=%2Fteams%2FJAG0092%2D1%2FDelade%20dokument%2FJAG0092b%5FHydrografi%2FArbetsdokument%2FCTD%2FGraphs"
 
 linkList = list()
 
@@ -92,23 +86,26 @@ for(site in unique(cmbMlt$`Site Name`)){
   a=a+facet_wrap(~Parameter,scales = "free")
   a=a+scale_color_manual(values =c("#ffad60", "#3b5998", "#88d8b0"))
   a=a+theme(legend.title = element_blank(), legend.text = element_text(),strip.text = element_text(), axis.title.y = element_text())
+  pdfName = paste0("CTD_Graph_",site,"_",min(unique(subMlt$Datum)),".pdf")
   unqStr=gsub("_", "%5F", substr(pdfName, 11, nchar(pdfName)-4)) 
   unqStr=gsub("-", "%2D", unqStr)
   linkList = unlist(append(linkList,paste0(sttStr, unqStr, endStr))) 
-  pdfName = paste0("CTD_Graph_",site,"_",min(unique(subMlt$Datum)),".pdf")
   ggsave(a, filename = pdfName, device = cairo_pdf, 
          width = 14, height = 16, units = "in")
 }
 
+#Finds the year and month interval, and converts it to a string for geofile naming. 
+srtMon=min(lubridate::month(cmbMlt$Date, label = TRUE))
+endMon=max(lubridate::month(cmbMlt$Date, label = TRUE))
+srtYr=min(lubridate::year(cmbMlt$Date))
+endYr=max(lubridate::year(cmbMlt$Date))
+
+moonName=gsub(" ", "", paste(as.character(unique(c(srtMon,endMon))), collapse  = " ")) 
+yrName=gsub(" ", "_", paste(as.character(unique(c(srtYr,endYr))), collapse  = " ")) 
+dateName = paste(yrName, moonName, sep = "_")
 
 ###Creates an empty gpkgPath###
 slimGeo=as.data.frame(matrix(ncol = 5, nrow = 0))
-names(slimGeo) = c("Site","Bottendjup","X","Y","Date")
-crsObj<-st_crs("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs") #WGS84_Script
-slimShp=st_as_sf(slimGeo, coords = c("Y","X"), crs = crsObj)
-gpkgPath="C:/Users/MartinAndersson/Calluna AB/JAG0092 Slite förstudie CCS 2021 - Dokument/JAG0092b, Hydrografi/GIS/Script/CTD/"
-myGpkg=paste0("CTD_GeoSlite",".gpkg")
-st_write(slimShp, paste0(gpkgPath,myGpkg), paste0("CTD_GeoSliteSlim"), append = TRUE)
 
 #Creates a matching gpkg layer that can link the PFD:s above
 for(site in unique(cmbDf$Station)){
@@ -118,17 +115,28 @@ for(site in unique(cmbDf$Station)){
   slimGeo=rbind(slimGeo, secRow)
 }
 
+names(slimGeo) = c("Site","Bottendjup","Y","X","Date")
+
 slimGeo$GraphLink = linkList
+
+#Link example #https://callunaab.sharepoint.com/teams/JAG0092-1/Delade%20dokument/Forms/AllItems.aspx?id=%2Fteams%2FJAG0092%2D1%2FDelade%20dokument%2FJAG0092b%5FHydrografi%2FArbetsdokument%2FCTD%2FGraphs%2FCTD%5FGraph%5FA%5F2022%2D08%2D11%2Epdf&viewid=9f30aa4a%2Dbcbc%2D45f0%2D8284%2D065ac39dc79a&parent=%2Fteams%2FJAG0092%2D1%2FDelade%20dokument%2FJAG0092b%5FHydrografi%2FArbetsdokument%2FCTD%2FGraphs
+
+crsObj<-st_crs("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs") #WGS84_Script
+slimShp=st_as_sf(slimGeo, coords = c("X","Y"), crs = crsObj)
+gpkgPath="C:/Users/MartinAndersson/Calluna AB/JAG0092-1_CCS_2021 - Dokument/JAG0092b_Hydrografi/Arbetsdokument/CTD"
+myGpkg=file.path(gpkgPath,"CTD_GeoSlite1.gpkg")
+st_write(slimShp, myGpkg, paste0("CTD", dateName), append = TRUE)
 
 # """
 # -Creating geodata from earlier hydrografi data. Merge it with new CTD-data. 
 # -Create scatter plot based on the merged data, by depth and month.
 # -Add the graph to a fake point within the dataframe. 
 # """
-
-setwd("C:/Users/MartinAndersson/Calluna AB/JAG0092 Slite förstudie CCS 2021 - Dokument/JAG0092b, Hydrografi/GIS/Script/CTD")
+setwd("C:/Users/MartinAndersson/Calluna AB/JAG0092-1_CCS_2021 - Dokument/JAG0092b_Hydrografi/Arbetsdokument/CTD/Script")
 hsDf=read.csv("Hydrografidata Slite 2022_SMHI-mall_0628.csv", sep = ",", fileEncoding = "UTF-8-BOM")
-cmbDf=read.csv("cmbDf.csv", sep = ",", fileEncoding = "UTF-8-BOM")
+old_cmbDf=read.csv("cmbDf.csv", sep = ",", fileEncoding = "UTF-8-BOM")
+
+#X|Y differ, need to copy and add date to previous combined file
 
 names(cmbDf) <-c("Station", "Djup", "Temperatur","Syre_mgL", "Sal_PSU", "Bottendjup", "Y", "X","Date")
 cmbDf = cmbDf[,c("Station", "Djup", "Temperatur","Syre_mgL", "Sal_PSU", "Bottendjup", "X", "Y","Date")]
@@ -203,20 +211,15 @@ bx = bx + labs(y="Mätvärden", x = "")
 bx = bx + scale_fill_manual(values =c("#ffad60", "#3b5998", "#88d8b0"))
 bx = bx + guides(fill = guide_legend(title = "Månad"))
 
-
-setwd("C:/Users/MartinAndersson/Calluna AB/JAG0092 Slite förstudie CCS 2021 - Dokument/JAG0092b, Hydrografi/GIS/Script/CTD/CTD_Summary")
+setwd("C:/Users/MartinAndersson/Calluna AB/JAG0092-1_CCS_2021 - Dokument/JAG0092b_Hydrografi/Arbetsdokument/CTD/Graphs/Sumry")
 plot=ggarrange(bx, tp, op, sp, ncol = 2, nrow = 2,common.legend = TRUE, legend = "bottom")
 
 annotate_figure(plot, top = text_grob("CTD-data Slite utredningsområde 2022", 
                                       color = "black", size = 13)) 
 
 ###Export manually with pdf 6*8 inches landscape###
-
-
-
 ###Export all geodata and attach summary graph
-
-sumLink="https://callunaab.sharepoint.com/teams/JAG0092/Delade%20dokument/Forms/AllItems.aspx?FolderCTID=0x012000FCC5841F9606934C9340F1C4DB33C914&id=%2Fteams%2FJAG0092%2FDelade%20dokument%2FJAG0092b%2C%20Hydrografi%2FGIS%2FScript%2FCTD%2FCTD%5FSummary%2FCTD%5FSummary%2Epdf&parent=%2Fteams%2FJAG0092%2FDelade%20dokument%2FJAG0092b%2C%20Hydrografi%2FGIS%2FScript%2FCTD%2FCTD%5FSummary"
+sumLink="https://callunaab.sharepoint.com/teams/JAG0092-1/Delade%20dokument/Forms/AllItems.aspx?id=%2Fteams%2FJAG0092%2D1%2FDelade%20dokument%2FJAG0092b%5FHydrografi%2FArbetsdokument%2FCTD%2FGraphs%2FSumry%2FCTD%5FSummary%2Epdf&viewid=9f30aa4a%2Dbcbc%2D45f0%2D8284%2D065ac39dc79a&parent=%2Fteams%2FJAG0092%2D1%2FDelade%20dokument%2FJAG0092b%5FHydrografi%2FArbetsdokument%2FCTD%2FGraphs%2FSumry"
 myMrg=na.omit(myMrg)#Do NOT run second time after adding the NA sumlink column below ^.^
 
 #Adds a fake point to the dataset to which the summary graph is linked
@@ -225,16 +228,31 @@ myMrg[dim(myMrg)[1],7:8] = c(18.85, 57.71)
 myMrg[dim(myMrg)[1],9] = lubridate::as_date(Sys.Date())
 myMrg[dim(myMrg)[1],10:11] = c(NA, sumLink)
 
-#sum(is.na(sort(myMrg$X)))
-#sum(is.na(sort(myMrg$Y)))
-
 #Geodata Section
 crsObj<-st_crs("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs") #WGS84_Script
 geoLayer=st_as_sf(myMrg, coords = c("X", "Y"), crs = crsObj)
-gpkgPath="C:/Users/MartinAndersson/Calluna AB/JAG0092 Slite förstudie CCS 2021 - Dokument/JAG0092b, Hydrografi/GIS/Script/CTD/"
 gpkg="CTD_GeoSlite.gpkg"
-st_write(geoLayer, paste0(gpkgPath, gpkg), "CTD_SliteAll",append = TRUE)
+st_write(geoLayer, paste0(gpkgPath, gpkg), "CTD_Sum",append = TRUE)
 
-slimShp=st_as_sf(slimGeo, coords = c("Y","X"), crs = crsObj)
 
-st_write(slimShp, paste0(gpkgPath,myGpkg), paste0("CTD_GeoSliteSum"), append = TRUE)
+
+#write.csv(cmbDf, "cmbDf.csv", row.names = FALSE, fileEncoding = "UTF-8")
+
+#Sometimes the data format changes, check it / check for 
+# timeForm=do.call(rbind,lapply(as.character(cmbDf$`Date (MM/DD/YYYY)`), function(x) stringr::str_split_fixed(x, "/",3)))
+# timeForm=apply(timeForm, 2, function(x) as.numeric(x))
+# timeMax=apply(timeForm, 2, max)
+# aVec = vector()
+# 
+# for(aNum in seq(length(timeMax))){
+#   if(timeMax[aNum] < 13){
+#     aVec= append(aVec, gsub(as.character(timeMax[aNum]), "%m",as.character(timeMax[aNum])))
+#     print("happened")
+#   }
+#     else if(timeMax[aNum] > 12  && timeMax[aNum] < 1000){
+#       aVec= append(aVec, gsub(as.character(timeMax[aNum]), "%d",as.character(timeMax[aNum])))
+#   }
+#     else {
+#       timeMax[aNum]=gsub(as.character(timeMax[aNum]), "%Y",as.character(timeMax[aNum]))
+#   }
+# }
