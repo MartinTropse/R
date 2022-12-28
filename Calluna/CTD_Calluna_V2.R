@@ -101,7 +101,11 @@ for(site in unique(cmbMlt$`Site Name`)){
 }
 
 
+<<<<<<< HEAD
 ###Creates an empty gpkgPath###
+=======
+
+>>>>>>> eaaca1de48840101ee8c240af0fe860b5e6435bc
 slimGeo=as.data.frame(matrix(ncol = 5, nrow = 0))
 names(slimGeo) = c("Site","Bottendjup","X","Y","Date")
 crsObj<-st_crs("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs") #WGS84_Script
