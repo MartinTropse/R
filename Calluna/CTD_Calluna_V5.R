@@ -15,6 +15,7 @@ df=read.csv("11aug_3nov_KorMeasurementFileExport_111422_145235.csv", fileEncodin
 
 startChk = TRUE
 
+#Finds the "startpoint" of data in the file and sets/identify the headers
 for(rows in seq(dim(df)[1])){
   clpsRow=paste(df[rows,], collapse="")
   boolChk=grepl(".+Cond µS/cm.+", clpsRow)
@@ -38,12 +39,13 @@ for(rows in seq(dim(df)[1])){
 siteRows=grep("Site Name", df$`Site Name`,fixed =TRUE)
 newDf=df[siteRows+1,]
 
+#Loads dataframe with metadata for hydrografi stations
 geoDf=read.csv("Hydrografi_Stationer.csv", fileEncoding = "UTF-8")
 geoDf$Station=gsub("MU3\\*","MU3",geoDf$Station)
 geoDf=geoDf[,c("Station","Bottendjup","X","Y")]
 
 newDf$DateTime=paste(newDf$`Date (MM/DD/YYYY)`,newDf$`Time (HH:mm:ss)`)
-newDf=newDf[,!(names(newDf) %in% list("Time (HH:mm:ss)"))]
+newDf=newDf[,!(names(newDf) %in% list("Time (HH:mm:ss)"))] # 
 newDf=newDf[,c("Site Name","Date (MM/DD/YYYY)","Depth m","Temp °C","ODO mg/L","Sal psu")]
 newDf$`Sal psu` = round(as.numeric(newDf$`Sal psu`),1)
 newDf$`ODO mg/L` = round(as.numeric(newDf$`ODO mg/L`),1)
@@ -58,6 +60,25 @@ cmbDf=cmbDf[,!(names(cmbDf) %in% c("Date (MM/DD/YYYY)"))]  # Removes previous on
 cmbMlt=melt(cmbDf, id.vars = c("Site Name","Date","Depth m", "Bottendjup","X","Y"))
 cmbMlt$`Site Name`<-droplevels(as.factor(cmbMlt$`Site Name`))
 cmbMlt$`Depth m` = as.numeric(cmbMlt$`Depth m`)
+
+subMlt = cmbMlt[cmbMlt$Date == "2022-11-01" & cmbMlt$`Site Name` == "U",]
+
+a=ggplot(data = subMlt,aes(y=subMlt$`Depth m`, x=, color=Parameter))
+a=a+geom_path(size=2)
+pdfTitle = paste0("CTD Profile: ",site," ",unique(subMlt$Datum)[1])
+a=a+scale_y_reverse()+labs(subtitle = pdfTitle)
+a=a+theme_bw(32)+theme(axis.text = element_text(size = 20), axis.title.x = element_blank(), legend.position = "bottom")
+a=a+facet_wrap(~Parameter,scales = "free")
+a=a+scale_color_manual(values =c("#ffad60", "#3b5998", "#88d8b0"))
+a=a+theme(legend.title = element_blank(), legend.text = element_text(),strip.text = element_text(), axis.title.y = element_text())
+pdfName = paste0("CTD_Graph_",site,"_",min(unique(subMlt$Datum)),".pdf")
+unqStr=gsub("_", "%5F", substr(pdfName, 11, nchar(pdfName)-4)) 
+unqStr=gsub("-", "%2D", unqStr)
+linkList = unlist(append(linkList,paste0(sttStr, unqStr, endStr))) 
+ggsave(a, filename = pdfName, device = cairo_pdf, 
+       width = 14, height = 16, units = "in")
+
+
 
 #Export the cmbDf for use in the scatterplot/merge section further down 
 names(cmbDf) <- c("Station", "Djup", "Temperatur","Syre_mgL", "Sal_PSU", "Bottendjup", "Y", "X", "Date") #Check X Y

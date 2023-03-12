@@ -10,12 +10,14 @@ library(stringr)
 
 set.seed(42) #Makes randomizations consistant between runs  
 
-#Check that these parameters match your data and intended host model, otherwise update!
+#Check that these parameters match your data and intended model settings, otherwise update!
 hostName = c("Beaver","Human", "Reindeer")  
 hostAbrv = c("B", "H", "R")
 hostDf = data.frame(hostAbrv, hostName)
 animal = 'R' #Decides the host model to be trained              
 hostBinaryCutoff = 0.5
+ntree = 3
+nleav = 15
 
 infile = "C:/Base/Project/ECWA-NOR/PCR_Sekvenser/ECWANOR_202212/alignment/input_ML/202301/AllSamples_ompF_csgD_202301_Input.csv"
 raw<-read.table(infile,sep=",",header=TRUE, stringsAsFactors = FALSE) ## makes everything tab-separated?
@@ -154,9 +156,6 @@ oppID=allID[!(allID %in% subID)] #Takes out the remaining 20% of the samples for
 sbin=bin[subID,] #Selects train data
 tbin=bin[oppID,] #Select test data
 soutcome=outcome[subID]
-
-ntree = 3
-nleav = 15
 
 #Train/test the models
 logregfit0<-logreg(soutcome, bin=sbin, type=3, select=1, ntrees= ntree, nleaves=nleav, anneal.control=Annealing, tree.control=TreeControl)
